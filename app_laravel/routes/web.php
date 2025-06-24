@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\AuditorController;
+use App\Http\Controllers\IssueController;
 use App\Http\Controllers\Manager\AuditController as ManagerAuditController;
 use App\Http\Controllers\Manager\ReportController as ManagerReportController;
 use App\Http\Controllers\Manager\AuditHistoryController as ManagerAuditHistoryController;
@@ -219,7 +220,11 @@ Route::middleware('guest')->group(function () {
         ]);
     })->name('password.reset');
 });
-
+Route::get('/auditor/forms/{formId}/details', [AuditorController::class, 'getAuditFormDetails']);
+Route::get('/auditor/forms/{formId}/issues', [AuditorController::class, 'getFormIssues']);
+Route::get('/auditor/forms/{formId}/previous-issues', [AuditorController::class, 'getPreviousFormIssue']);
+Route::get('/auditor/issues/{issueId}/corrective-actions', [IssueController::class, 'getIssueCorrectiveActions']);
+    Route::get('/auditor/issues/corrective-actions-count', [IssueController::class, 'getCorrectiveActionCounts']);
 Route::get('/auditor/audits/view', [AuditorController::class, 'viewAudit'])
     ->name('auditor.audits.view');
 // Include standard auth routes (for POST handlers)

@@ -25,14 +25,6 @@ export default function FormReviewModal({ form, onClose }) {
     const [issueDueDate, setIssueDueDate] = useState(null);
     const [issueErrors, setIssueErrors] = useState({});
     
-    // Edit issue state
-    const [editingIssue, setEditingIssue] = useState(null);
-    const [editIssueDescription, setEditIssueDescription] = useState('');
-    const [editIssueSeverity, setEditIssueSeverity] = useState('');
-    const [editIssueDueDate, setEditIssueDueDate] = useState(null);
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [deleteIssueId, setDeleteIssueId] = useState(null);
-
     // Add this state variable at the top with your other state variables
 const [issueVersion, setIssueVersion] = useState('current');
 
@@ -60,85 +52,7 @@ const [correctiveActionCounts, setCorrectiveActionCounts] = useState({});
             setIssueErrors({});
         }
     }, [selectedStatus, issueDescription, issueSeverity, issueDueDate]);
-    // Function to start editing an issue
-const startEditIssue = (issue) => {
-    setEditingIssue(issue);
-    setEditIssueDescription(issue.description);
-    setEditIssueSeverity(issue.severity);
-    setEditIssueDueDate(issue.due_date ? new Date(issue.due_date) : null);
-};
 
-// Function to cancel editing
-const cancelEditIssue = () => {
-    setEditingIssue(null);
-    setEditIssueDescription('');
-    setEditIssueSeverity('');
-    setEditIssueDueDate(null);
-};
-
-// Function to save edited issue
-const saveEditIssue = async () => {
-    if (!editingIssue) return;
-    
-    try {
-        const data = {
-            description: editIssueDescription,
-            severity: editIssueSeverity,
-            due_date: editIssueDueDate ? editIssueDueDate.toISOString().split('T')[0] : null
-        };
-        
-        await axios.put(`/manager/issues/${editingIssue.id}`, data);
-        
-        // Refresh issues list
-        const issuesResponse = await axios.get(`/manager/forms/${form.id}/issues`);
-        setIssues(issuesResponse.data.data || []);
-        
-        // Reset edit state
-        cancelEditIssue();
-    } catch (error) {
-        console.error('Error updating issue:', error);
-        setApiError({
-            message: 'Failed to update issue',
-            details: error.message,
-            debug: { error }
-        });
-    }
-};
-
-    // Function to confirm deletion
-    const confirmDeleteIssue = (issueId) => {
-        setDeleteIssueId(issueId);
-        setIsDeleting(true);
-    };
-
-    // Function to cancel deletion
-    const cancelDeleteIssue = () => {
-        setDeleteIssueId(null);
-        setIsDeleting(false);
-    };
-
-    // Function to delete issue
-    const deleteIssue = async () => {
-        if (!deleteIssueId) return;
-        
-        try {
-            await axios.delete(`/manager/issues/${deleteIssueId}`);
-            
-            // Refresh issues list
-            const issuesResponse = await axios.get(`/manager/forms/${form.id}/issues`);
-            setIssues(issuesResponse.data.data || []);
-            
-            // Reset delete state
-            cancelDeleteIssue();
-        } catch (error) {
-            console.error('Error deleting issue:', error);
-            setApiError({
-                message: 'Failed to delete issue',
-                details: error.message,
-                debug: { error }
-            });
-        }
-    };
     // Validate issue fields when status is Rejected
     const validateIssueFields = () => {
         const errors = {};
@@ -169,111 +83,6 @@ const saveEditIssue = async () => {
         return Object.keys(errors).length === 0;
     };
 
-    // Function to handle status change submission
-    const handleStatusChange = async () => {
-        // Reset any previous errors
-        setApiError(null);
-        
-        // Use form ID from either formData or directly from form prop
-        const formId = formData?.id || form?.id;
-        
-        if (!formId) {
-            setApiError({
-                message: 'Form ID is missing',
-                details: 'Cannot update the form status because the form ID is missing.',
-                debug: { formData, form }
-            });
-            return;
-        }
-        
-        setIsSubmitting(true);
-        
-        // Declare data here so it's available in both try and catch blocks
-        let data = {};
-        
-        try {
-            // Map status text to status_id
-            let status_id;
-            switch (selectedStatus) {
-                case 'Approved':
-                    status_id = 5;
-                    break;
-                case 'Rejected':
-                    status_id = 4;
-                    break;
-                default:
-                    status_id = 5; // Default to In Progress
-            }
-            
-            data = { status_id }; // Assign to existing variable
-            
-            // Add issue details if rejected
-            if (selectedStatus === 'Rejected') {
-                if (!validateIssueFields()) {
-                    setIsSubmitting(false);
-                    return;
-                }
-                
-                data.issue_description = issueDescription;
-                data.issue_severity = issueSeverity;
-                
-                if (issueDueDate) {
-                    data.issue_due_date = issueDueDate.toISOString().split('T')[0];
-                }
-            }
-            
-            console.log(`Submitting form status update to /manager/forms/${formId}/status`);
-            console.log('Data:', data);
-            
-            // CSRF protection is disabled - don't include the token
-            const response = await axios.post(`/manager/forms/${formId}/status`, data);
-            
-            console.log('Response:', response.data);
-            
-            // Show success message
-            alert(`Form status successfully updated to ${selectedStatus}`);
-            
-            // Refresh the page to show updated data
-            window.location.reload();
-            
-        } catch (error) {
-            console.error('Error updating form status:', error);
-            
-            // Create detailed error object
-            let errorMessage = 'Failed to update form status';
-            let errorDetails = '';
-            let errorData = null;
-            
-            if (error.response) {
-                errorMessage = `Server Error (${error.response.status})`;
-                errorDetails = error.response.data?.message || 'The server encountered an internal error.';
-                errorData = error.response.data;
-                
-                // Log the full response for debugging
-                console.error('Full error response:', error.response);
-            } else if (error.request) {
-                errorMessage = 'No response from server';
-                errorDetails = 'The server did not respond to the request.';
-            } else {
-                errorMessage = error.message || 'Unknown error';
-                errorDetails = 'An error occurred while preparing the request.';
-            }
-            
-            setApiError({
-                message: errorMessage,
-                details: errorDetails,
-                debug: {
-                    url: `/manager/forms/${formId}/status`,
-                    data: data, // Now this works!
-                    serverResponse: errorData,
-                    error: error.message
-                }
-            });
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
     // Add this function outside useEffect for reuse
     const fetchFormDetails = async () => {
         if (!form || !form.id) {
@@ -283,7 +92,7 @@ const saveEditIssue = async () => {
         }
         
         try {
-            const formResponse = await axios.get(`/manager/forms/${form.id}/details`);
+            const formResponse = await axios.get(`/auditor/forms/${form.id}/details`);
             setFormData(formResponse.data);
             
             // Call the dedicated issue fetching function
@@ -304,12 +113,12 @@ const fetchIssues = async (version = issueVersion) => {
     let issuesResponse;
     
     if (version === 'current') {
-      issuesResponse = await axios.get(`/manager/forms/${form.id}/issues`);
+      issuesResponse = await axios.get(`/auditor/forms/${form.id}/issues`);
       
       // Get counts for all issues in one batch request
       if (issuesResponse.data.data?.length > 0) {
         const issueIds = issuesResponse.data.data.map(issue => issue.id);
-        const countsResponse = await axios.get('/manager/issues/corrective-actions-count', {
+        const countsResponse = await axios.get('/auditor/issues/corrective-actions-count', {
           params: { issueIds: issueIds.join(',') }
         });
         
@@ -319,11 +128,11 @@ const fetchIssues = async (version = issueVersion) => {
       }
     } else {
       // Previous version handling - same approach
-      issuesResponse = await axios.get(`/manager/forms/${form.id}/previous-issues`);
+      issuesResponse = await axios.get(`/auditor/forms/${form.id}/previous-issues`);
       
       if (issuesResponse.data.data?.length > 0) {
         const issueIds = issuesResponse.data.data.map(issue => issue.id);
-        const countsResponse = await axios.get('/manager/issues/corrective-actions-count', {
+        const countsResponse = await axios.get('/auditor/issues/corrective-actions-count', {
           params: { issueIds: issueIds.join(',') }
         });
         
@@ -481,7 +290,7 @@ const toggleCorrectiveActions = async (issueId) => {
                 [issueId]: true
             });
             
-            const response = await axios.get(`/manager/issues/${issueId}/corrective-actions`);
+            const response = await axios.get(`/auditor/issues/${issueId}/corrective-actions`);
             
             setCorrectiveActions({
                 ...correctiveActions,
@@ -579,7 +388,7 @@ const toggleCorrectiveActions = async (issueId) => {
                     </div>
                     <div className="p-4 ">
                         <p className="text-xs font-medium uppercase text-gray-500">Outlet</p>
-                        <p className="mt-1 text-sm font-medium text-gray-900">{form.outlet || 'Unknown'}</p>
+                        <p className="mt-1 text-sm font-medium text-gray-900">{form.outletName || 'Unknown'}</p>
                     </div>
                     <div className="p-4">
                         <p className="text-xs font-medium uppercase text-gray-500">Updated At</p>
@@ -772,84 +581,6 @@ const toggleCorrectiveActions = async (issueId) => {
                     <div className="divide-y divide-gray-200">
                         {issues.map((issue) => (
                             <div key={issue.id} className="p-4">
-                                {editingIssue && editingIssue.id === issue.id ? (
-                                    /* Edit Issue Form */
-                                    <div className="rounded-md bg-blue-50 p-4">
-                                        <div className="flex justify-between items-center mb-3">
-                                            <h4 className="text-sm font-medium text-blue-800">Edit Issue #{issue.id}</h4>
-                                            <button
-                                                onClick={() => cancelEditIssue()}
-                                                className="text-blue-600 hover:text-blue-800"
-                                            >
-                                                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                        
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">
-                                                    Issue Description <span className="text-red-500">*</span>
-                                                </label>
-                                                <textarea
-                                                    rows="3"
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                                                    value={editIssueDescription}
-                                                    onChange={(e) => setEditIssueDescription(e.target.value)}
-                                                ></textarea>
-                                            </div>
-                                            
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">
-                                                    Severity <span className="text-red-500">*</span>
-                                                </label>
-                                                <select
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                                                    value={editIssueSeverity}
-                                                    onChange={(e) => setEditIssueSeverity(e.target.value)}
-                                                >
-                                                    {severityOptions.map(option => (
-                                                        <option key={option.value} value={option.value}>
-                                                            {option.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">
-                                                    Resolution Due Date <span className="text-red-500">*</span>
-                                                </label>
-                                                <DatePicker
-                                                    selected={editIssueDueDate}
-                                                    onChange={date => setEditIssueDueDate(date)}
-                                                    minDate={new Date()}
-                                                    dateFormat="yyyy-MM-dd"
-                                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                                                />
-                                            </div>
-                                            
-                                            <div className="flex justify-end space-x-3">
-                                                <button
-                                                    type="button"
-                                                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                                                    onClick={() => cancelEditIssue()}
-                                                >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
-                                                    onClick={() => saveEditIssue()}
-                                                >
-                                                    Save Changes
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    /* Regular Issue View */
                                     <>
                                         <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
                                             {/* Top Left: ID, Severity, Due Date */}
@@ -863,31 +594,6 @@ const toggleCorrectiveActions = async (issueId) => {
 
                                             {/* Top Right: Actions and Created Date */}
                                             <div className="flex items-center gap-3 self-start sm:self-center">
-                                                <div className="flex space-x-2">
-                                                    {/* Only show edit/delete buttons for current version issues that don't have corrective actions */}
-                                                    {issueVersion === 'current' && (!correctiveActions[issue.id] || correctiveActions[issue.id]?.length === 0) && (
-                                                        <>
-                                                            <button
-                                                                onClick={() => startEditIssue(issue)}
-                                                                className="text-gray-400 hover:text-blue-600 transition-colors"
-                                                                title="Edit Issue"
-                                                            >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                                                </svg>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => confirmDeleteIssue(issue.id)}
-                                                                className="text-gray-400 hover:text-red-600 transition-colors"
-                                                                title="Delete Issue"
-                                                            >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                </svg>
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                </div>
                                                 <div className="text-xs text-gray-500">
                                                     {formatDateTime(issue.created_at)}
                                                 </div>
@@ -972,7 +678,6 @@ const toggleCorrectiveActions = async (issueId) => {
                                             )}
                                         </div>
                                     </>
-                                )}
                             </div>
                         ))}
                     </div>
