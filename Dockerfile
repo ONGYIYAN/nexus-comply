@@ -1,17 +1,8 @@
 # Stage 1: Install PHP dependencies with Composer
 FROM composer:2.5 as vendor
 WORKDIR /app
-
-# Install the gd PHP extension and its dependencies
-RUN apt-get update && apt-get install -y \
-      libpng-dev \
-      libjpeg-dev \
-      libfreetype6-dev \
-      zip \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd zip
-
 COPY app_laravel/composer.json app_laravel/composer.lock ./
+# We ignore platform requirements here because the gd extension is installed in the final stage
 RUN composer install --ignore-platform-reqs --no-interaction --no-dev --prefer-dist --optimize-autoloader
 
 # Stage 2: Build frontend assets with Node.js
