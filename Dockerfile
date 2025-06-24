@@ -3,7 +3,8 @@ FROM composer:2.5 as vendor
 WORKDIR /app
 COPY app_laravel/composer.json app_laravel/composer.lock ./
 # We ignore platform requirements here because the gd extension is installed in the final stage
-RUN composer install --ignore-platform-reqs --no-interaction --no-dev --prefer-dist --optimize-autoloader
+# We also skip scripts because the full application code isn't present in this stage
+RUN composer install --ignore-platform-reqs --no-scripts --no-interaction --no-dev --prefer-dist --optimize-autoloader
 
 # Stage 2: Build frontend assets with Node.js
 FROM node:18 as frontend
