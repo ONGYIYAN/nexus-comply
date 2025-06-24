@@ -33,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force HTTPS in production
+    if (env('APP_ENV') === 'production') {
+        $this->app['request']->server->set('HTTPS', true);
+    }
         Vite::prefetch(concurrency: 3);
 
         Schema::defaultStringLength(191);

@@ -413,6 +413,22 @@ useEffect(() => {
         return date.toLocaleString('en-GB', options);
     }
 
+    // Helper to parse non-ISO date as UTC and display in Asia/Kuala_Lumpur
+    function parseAsUTCAndConvert(dateString) {
+        if (!dateString) return 'N/A';
+        // Convert "2025-06-23 16:58:22" to ISO UTC
+        const isoString = dateString.replace(' ', 'T') + 'Z';
+        const date = new Date(isoString);
+        return date.toLocaleString('en-GB', {
+            timeZone: 'Asia/Kuala_Lumpur',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    }
 
     // Severity options for dropdown
     const severityOptions = [
@@ -569,12 +585,7 @@ const toggleCorrectiveActions = async (issueId) => {
                         <p className="text-xs font-medium uppercase text-gray-500">Updated At</p>
                         <p className="mt-1 text-sm font-medium text-gray-900">
                             {formData?.form?.updatedAt ? 
-                                new Date(formData.form.updatedAt).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                }) 
+                                parseAsUTCAndConvert(formData.form.updatedAt)
                                 : 'N/A'}
                         </p>
                     </div>

@@ -131,7 +131,7 @@ export default function DashboardPage({
                         <div className="lg:col-span-2 space-y-6">
                             {/* Auditor Performance */}
                             <div className="overflow-hidden bg-white px-6 py-6 shadow-sm sm:rounded-lg">
-                                <h2 className="mb-4 text-lg font-semibold text-gray-800">Auditor Performance</h2>
+                                <h2 className="mb-4 text-lg font-semibold text-gray-800">Outlet Performance</h2>
                                 <div className="overflow-x-auto">
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">

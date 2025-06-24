@@ -337,27 +337,62 @@ export default function AuditReportingSection({ states = [], complianceCategorie
                                     </div>
                                     
                                     <div>
-                                        <label htmlFor={`filter-${report.id}`} className="block text-sm font-medium text-gray-700">
-                                            {report.id === 2 ? 'Manager' : (report.id === 3 ? 'Outlet' : (report.id === 4 ? 'Standard' : 'State'))}
-                                        </label>
-                                        <select
-                                            id={`filter-${report.id}`}
-                                            className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500"
-                                        >
-                                            <option value="all">All</option>
-                                            {report.id === 2 && managers.map(manager => (
-                                                <option key={manager.id} value={manager.name}>{manager.name}</option>
-                                            ))}
-                                            {report.id === 3 && outlets.map(outlet => (
-                                                <option key={outlet.id} value={outlet.name}>{outlet.name}</option>
-                                            ))}
-                                            {report.id === 4 && complianceCategories.map(category => (
-                                                <option key={category.id} value={category.name}>{category.name}</option>
-                                            ))}
-                                            {report.id === 1 && states.map(state => (
-                                                <option key={state} value={state}>{state}</option>
-                                            ))}
-                                        </select>
+                                        {(() => {
+                                            // Conditionally render the filter dropdowns
+                                            // Only show the dropdown if there is more than one option.
+                                            // Otherwise, render a hidden select with the single option pre-selected.
+
+                                            if (report.id === 1) { // State Filter
+                                                if (states.length <= 1) {
+                                                    return (
+                                                        <select id={`filter-${report.id}`} className="hidden" defaultValue={states[0] || ''}>
+                                                            {states.length === 1 && <option value={states[0]}>{states[0]}</option>}
+                                                        </select>
+                                                    );
+                                                }
+                                            } else if (report.id === 3) { // Outlet Filter
+                                                if (outlets.length <= 1) {
+                                                    return (
+                                                        <select id={`filter-${report.id}`} className="hidden" defaultValue={outlets[0]?.name || ''}>
+                                                            {outlets.length === 1 && <option value={outlets[0].name}>{outlets[0].name}</option>}
+                                                        </select>
+                                                    );
+                                                }
+                                            } else if (report.id === 4) { // Standard Filter
+                                                if (complianceCategories.length <= 1) {
+                                                    return (
+                                                        <select id={`filter-${report.id}`} className="hidden" defaultValue={complianceCategories[0]?.name || ''}>
+                                                            {complianceCategories.length === 1 && <option value={complianceCategories[0].name}>{complianceCategories[0].name}</option>}
+                                                        </select>
+                                                    );
+                                                }
+                                            }
+
+                                            // Default: Render the visible dropdown
+                                            return (
+                                                <>
+                                                    <label htmlFor={`filter-${report.id}`} className="block text-sm font-medium text-gray-700">
+                                                        {report.id === 3 ? 'Outlet' : (report.id === 4 ? 'Standard' : 'State')}
+                                                    </label>
+                                                    <select
+                                                        id={`filter-${report.id}`}
+                                                        className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500"
+                                                        defaultValue="all"
+                                                    >
+                                                        <option value="all">All</option>
+                                                        {report.id === 3 && outlets.map(outlet => (
+                                                            <option key={outlet.id} value={outlet.name}>{outlet.name}</option>
+                                                        ))}
+                                                        {report.id === 4 && complianceCategories.map(category => (
+                                                            <option key={category.id} value={category.name}>{category.name}</option>
+                                                        ))}
+                                                        {report.id === 1 && states.map(state => (
+                                                            <option key={state} value={state}>{state}</option>
+                                                        ))}
+                                                    </select>
+                                                </>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
 

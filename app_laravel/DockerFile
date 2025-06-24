@@ -52,3 +52,20 @@ COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
 
 # Expose port 80 for Apache
 EXPOSE 80
+
+# Copy composer files first to leverage Docker cache
+COPY app_laravel/composer.json app_laravel/composer.lock ./
+
+# Install Composer dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-plugins --no-scripts
+
+# Copy the rest of your Laravel application code
+COPY app_laravel/ .
+
+# This would be for your frontend assets
+RUN npm install
+RUN npm run build
+
+# Expose port and set the command to start the server
+EXPOSE 8000
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

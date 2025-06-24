@@ -418,7 +418,7 @@ export default function ReviewSubmissionsSection({ onReviewForm, onReviewAudit, 
                             </svg>
                         </div>
                         <div>
-                            <dt className="truncate text-sm font-medium text-gray-500">Froms Requiring Review</dt>
+                            <dt className="truncate text-sm font-medium text-gray-500">Forms Requiring Review</dt>
                             <dd className="mt-1 text-3xl font-semibold text-gray-900">{calculateFormsRequiringReview()}</dd>
                         </div>
                     </div>
