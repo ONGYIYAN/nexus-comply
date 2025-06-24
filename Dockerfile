@@ -1,6 +1,16 @@
 # Stage 1: Install PHP dependencies with Composer
 FROM composer:2.5 as vendor
 WORKDIR /app
+
+# Install the gd PHP extension and its dependencies
+RUN apt-get update && apt-get install -y \
+      libpng-dev \
+      libjpeg-dev \
+      libfreetype6-dev \
+      zip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd zip
+
 COPY app_laravel/composer.json app_laravel/composer.lock ./
 RUN composer install -vvv --no-interaction --no-dev --prefer-dist --optimize-autoloader
 
