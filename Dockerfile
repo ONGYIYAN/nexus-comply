@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install gd zip
 
 COPY app_laravel/composer.json app_laravel/composer.lock ./
-RUN composer install -vvv --no-interaction --no-dev --prefer-dist --optimize-autoloader
+RUN composer install --ignore-platform-reqs --no-interaction --no-dev --prefer-dist --optimize-autoloader
 
 # Stage 2: Build frontend assets with Node.js
 FROM node:18 as frontend
