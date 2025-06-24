@@ -48,7 +48,7 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Configure Apache
 RUN a2enmod rewrite
-COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+COPY app_laravel/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 # Expose port 80 for Apache
 EXPOSE 80
